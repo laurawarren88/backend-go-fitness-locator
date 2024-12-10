@@ -36,4 +36,5 @@ func SetupServer() *gin.Engine {
 
 func SetupHandlers(router *gin.Engine) {
 	routes.RegisterHomeRoutes(router)
+	routes.RegisterUserRoutes(router)
 }
