@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/laurawarren88/go_spa_backend.git/middleware"
 	"github.com/laurawarren88/go_spa_backend.git/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -66,7 +68,77 @@ func (uc *UserController) GetLoginForm(ctx *gin.Context) {
 }
 
 func (uc *UserController) LoginUser(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	var loginRequest struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		return
+	}
+
+	var user models.User
+	uc.DB.First(&user, "email = ?", loginRequest.Email)
+	if user.ID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email"})
+		return
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	accessToken, err := middleware.GenerateToken(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
+	}
+
+	refreshToken, err := middleware.GenerateRefreshToken(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate refresh token"})
+		return
+	}
+
+	domain, secure, httpOnly, err := middleware.GetCookieSettings()
+	if err != nil {
+		log.Fatalf("Failed to parse environment variables: %v", err)
+	}
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie(
+		"access_token",
+		accessToken,
+		3600*1,
+		"/",
+		domain,
+		secure,
+		httpOnly,
+	)
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie(
+		"refresh_token",
+		refreshToken,
+		3600*24*30,
+		"/",
+		domain,
+		secure,
+		httpOnly,
+	)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"user": gin.H{
+			"_id":      user.ID,
+			"email":    user.Email,
+			"username": user.Username,
+			"isAdmin":  user.IsAdmin,
+		},
+	})
 }
 
 func (uc *UserController) ForgotPassword(ctx *gin.Context) {
@@ -78,5 +150,38 @@ func (uc *UserController) ResetPassword(ctx *gin.Context) {
 }
 
 func (uc *UserController) LogoutUser(ctx *gin.Context) {
+	log.Println("LogoutUser endpoint hit")
+
+	domain, err := middleware.GetLogoutCookieSettings()
+	if err != nil {
+		log.Fatalf("Failed to parse environment variables: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process logout"})
+		return
+	}
+
+	secure, httpOnly := false, false
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie(
+		"access_token",
+		"",
+		-1,
+		"/",
+		domain,
+		secure,
+		httpOnly,
+	)
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		domain,
+		secure,
+		httpOnly,
+	)
+
 	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
