@@ -6,8 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/laurawarren88/go_spa_backend.git/controllers"
 	"github.com/laurawarren88/go_spa_backend.git/middleware"
 	"github.com/laurawarren88/go_spa_backend.git/routes"
+	"gorm.io/gorm"
 )
 
 func LoadEnv() {
@@ -34,7 +36,10 @@ func SetupServer() *gin.Engine {
 	return router
 }
 
-func SetupHandlers(router *gin.Engine) {
-	routes.RegisterHomeRoutes(router)
-	routes.RegisterUserRoutes(router)
+func SetupHandlers(router *gin.Engine, db *gorm.DB) {
+	homeController := controllers.NewHomeController(db)
+	userController := controllers.NewUserController(db)
+
+	routes.RegisterHomeRoutes(router, homeController)
+	routes.RegisterUserRoutes(router, userController)
 }

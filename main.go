@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/laurawarren88/go_spa_backend.git/config"
+	"github.com/laurawarren88/go_spa_backend.git/database"
 )
 
 func init() {
@@ -13,9 +14,12 @@ func init() {
 }
 
 func main() {
+	database.ConnectToDB()
+	db := database.GetDB()
+
 	router := config.SetupServer()
 
-	config.SetupHandlers(router)
+	config.SetupHandlers(router, db)
 
 	fmt.Printf("Starting the server on port %s\n", config.GetEnv("PORT", "8000"))
 	if err := router.Run(":" + config.GetEnv("PORT", "8000")); err != nil {
