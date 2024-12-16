@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -25,16 +26,29 @@ func (uc *UserController) GetSignupForm(ctx *gin.Context) {
 }
 
 func (uc *UserController) SignupUser(ctx *gin.Context) {
+	if ctx.Request.Method == "OPTIONS" {
+		return
+	}
+
+	var payload error
 	var user models.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		log.Println("Payload binding error:", err)
 		return
 	}
 
+	log.Println("Received payload:", payload)
+
 	var existingUser models.User
-	if err := uc.DB.Where("email = ? OR username = ?", user.Email, user.Username).First(&existingUser).Error; err == nil {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "Email or username already registered"})
+	result := uc.DB.Where("email = ? OR username = ?", user.Email, user.Username).First(&existingUser)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		log.Println("User not found, proceeding to create.")
+		// Proceed to create the user
+	} else if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		log.Println("Database error:", result.Error)
 		return
 	}
 
@@ -184,4 +198,30 @@ func (uc *UserController) LogoutUser(ctx *gin.Context) {
 	)
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+}
+
+func (uc *UserController) GetProfile(ctx *gin.Context) {
+	if ctx.Request.Method == "OPTIONS" {
+		return
+	}
+
+	userID := ctx.Param("id")
+	if userID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	var user models.User
+	err := uc.DB.Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"_id":      user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"isAdmin":  user.IsAdmin,
+	})
 }
