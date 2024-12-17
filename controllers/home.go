@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/laurawarren88/go_spa_backend.git/models"
 	"gorm.io/gorm"
 )
 
@@ -16,5 +18,13 @@ func NewHomeController(db *gorm.DB) *HomeController {
 }
 
 func (hc *HomeController) GetHome(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
+	postcode := ctx.Query("postcode")
+	radius := ctx.Query("radius")
+
+	// Logging for debugging purposes
+	fmt.Printf("Received query params - Postcode: %s, Radius: %s\n", postcode, radius)
+
+	// Dummy data for now
+	var gyms []models.Gym
+	ctx.JSON(http.StatusOK, gyms)
 }

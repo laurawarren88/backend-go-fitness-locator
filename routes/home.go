@@ -6,9 +6,5 @@ import (
 )
 
 func RegisterHomeRoutes(router *gin.Engine, hc *controllers.HomeController) {
-
-	homeRoutes := router.Group("/project")
-	{
-		homeRoutes.GET("/home", hc.GetHome)
-	}
+	router.GET("/home", hc.GetHome)
 }
