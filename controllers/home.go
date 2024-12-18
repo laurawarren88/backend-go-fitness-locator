@@ -25,6 +25,6 @@ func (hc *HomeController) GetHome(ctx *gin.Context) {
 	fmt.Printf("Received query params - Postcode: %s, Radius: %s\n", postcode, radius)
 
 	// Dummy data for now
-	var gyms []models.Gym
-	ctx.JSON(http.StatusOK, gyms)
+	var activities []models.Activities
+	ctx.JSON(http.StatusOK, activities)
 }
