@@ -12,7 +12,8 @@ func RegisterGymRoutes(router *gin.Engine, gc *controllers.GymController) {
 		gymRoutes.GET("/new", gc.RenderCreateGymForm)
 		gymRoutes.POST("/new", gc.CreateGym)
 		gymRoutes.GET("/:id", gc.GetGymById)
-		gymRoutes.PUT("/:id", gc.UpdateGym)
+		gymRoutes.GET("/:id/edit", gc.RenderEditGymForm)
+		gymRoutes.PUT("/:id/edit", gc.UpdateGym)
 		gymRoutes.DELETE("/:id", gc.DeleteGym)
 	}
 }
