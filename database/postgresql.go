@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/laurawarren88/go_spa_backend.git/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -31,9 +32,46 @@ func ConnectToDB() {
 	if err := DB.AutoMigrate(&models.User{}, &models.Activities{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
-	log.Println("Database migration completed")
+	// log.Println("Database migration completed")
 }
 
 func GetDB() *gorm.DB {
 	return DB
+}
+
+func SetupAdminUser(db *gorm.DB) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(os.Getenv("ADMIN_PASSWORD")), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Password hashing failed: %v", err)
+		return err
+	}
+	// log.Println("Hashed Password:", string(hashedPassword))
+
+	admin := models.User{
+		Username: "admin",
+		Email:    "admin@admin.com",
+		Password: string(hashedPassword),
+		IsAdmin:  true,
+	}
+
+	var existingUser models.User
+	result := db.Where("email = ?", admin.Email).First(&existingUser)
+
+	if result.Error == gorm.ErrRecordNotFound {
+		if err := db.Create(&admin).Error; err != nil {
+			return err
+		}
+	} else if result.Error == nil {
+		existingUser.Username = admin.Username
+		existingUser.Password = admin.Password
+		existingUser.IsAdmin = admin.IsAdmin
+		if err := db.Save(&existingUser).Error; err != nil {
+			return err
+		}
+		// log.Println("Admin user updated successfully")
+	} else {
+		return result.Error
+	}
+
+	return nil
 }

@@ -8,13 +8,14 @@ import (
 func RegisterActivitiesRoutes(router *gin.Engine, ac *controllers.ActivitiesController) {
 	activitiesRoutes := router.Group("/activities")
 	{
-		activitiesRoutes.GET("/", ac.GetAllActivities)
-		activitiesRoutes.GET("/new", ac.RenderCreateActivityForm)
-		activitiesRoutes.POST("/new", ac.CreateActivity)
+		// activitiesRoutes.GET("/", ac.GetAllActivities)
+		// activitiesRoutes.GET("/new", ac.RenderCreateActivityForm)
+		// activitiesRoutes.POST("/new", ac.CreateActivity)
 		activitiesRoutes.GET("/locator", ac.GetActivitiesLocator)
-		activitiesRoutes.GET("/:id", ac.GetActivityById)
-		activitiesRoutes.GET("/:id/edit", ac.RenderEditActivityForm)
-		activitiesRoutes.PUT("/:id/edit", ac.UpdateActivity)
-		activitiesRoutes.DELETE("/:id", ac.DeleteActivity)
+		activitiesRoutes.GET("/showMap", ac.RateLimitMiddleware, ac.RenderMapPage)
+		// activitiesRoutes.GET("/:id", ac.GetActivityById)
+		// activitiesRoutes.GET("/:id/edit", ac.RenderEditActivityForm)
+		// activitiesRoutes.PUT("/:id/edit", ac.UpdateActivity)
+		// activitiesRoutes.DELETE("/:id", ac.DeleteActivity)
 	}
 }

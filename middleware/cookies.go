@@ -61,6 +61,7 @@ func GetLogoutCookieSettings() (string, error) {
 	}
 
 	domain := extractDomain(originEnvVar)
+	fmt.Println("Extracted domain:", domain)
 	if domain == "" {
 		return "", fmt.Errorf("failed to extract domain from origin: %s", originEnvVar)
 	}

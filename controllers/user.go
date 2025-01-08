@@ -99,8 +99,10 @@ func (uc *UserController) LoginUser(ctx *gin.Context) {
 		return
 	}
 
+	log.Println("Comparing passwords...")
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password))
 	if err != nil {
+		log.Println("Password comparison failed:", err)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
@@ -169,11 +171,13 @@ func (uc *UserController) LogoutUser(ctx *gin.Context) {
 	domain, err := middleware.GetLogoutCookieSettings()
 	if err != nil {
 		log.Fatalf("Failed to parse environment variables: %v", err)
+		log.Println("GetLogoutCookieSettings error:", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process logout"})
 		return
 	}
 
 	secure, httpOnly := false, false
+	log.Printf("Domain: %s, Secure: %v, HttpOnly: %v", domain, secure, httpOnly)
 
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie(
@@ -185,6 +189,7 @@ func (uc *UserController) LogoutUser(ctx *gin.Context) {
 		secure,
 		httpOnly,
 	)
+	log.Println("Access token cookie cleared")
 
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie(
@@ -196,6 +201,7 @@ func (uc *UserController) LogoutUser(ctx *gin.Context) {
 		secure,
 		httpOnly,
 	)
+	log.Println("Refresh token cookie cleared")
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
