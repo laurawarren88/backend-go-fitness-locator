@@ -24,28 +24,6 @@ func NewPlaceController(db *gorm.DB) *PlaceController {
 	return &PlaceController{DB: db}
 }
 
-// type RateLimitData struct {
-// 	LastRequestTime time.Time
-// 	RequestCount    int
-// }
-
-// const (
-// 	rateLimitWindow      = time.Minute * 1 // Time window for rate limiting
-// 	rateLimitMaxRequests = 10              // Max requests per API key per window
-// )
-
-// type Place struct {
-// 	Name     string  `json:"name"`
-// 	Vicinity string  `json:"vicinity"`
-// 	Lat      float64 `json:"lat"`
-// 	Lng      float64 `json:"lng"`
-// }
-
-// func HandleError(ctx *gin.Context, status int, message string) {
-// 	log.Printf("Error [%d]: %s\n", status, message)
-// 	ctx.JSON(status, gin.H{"error": message})
-// }
-
 func (pc *PlaceController) RenderCreateActivityForm(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"title": "Create a New Activity",
@@ -179,61 +157,153 @@ func saveFile(file multipart.File, path string) error {
 	return err
 }
 
-// func (pc *PlaceController) GetPlaceLocator(ctx *gin.Context) {
-// 	ctx.JSON(http.StatusOK, gin.H{"message": "Locator Page"})
-// }
+func (pc *PlaceController) GetPlaceLocator(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"message": "Locator Page"})
+}
 
-// func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
-// 	id := ctx.Param("id")
-// 	var activities models.Activities
-// 	if err := pc.DB.First(&activities, id).Error; err != nil {
-// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
-// 		return
-// 	}
-// 	ctx.JSON(http.StatusOK, activities)
-// }
+func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
+	id := ctx.Param("id")
 
-// func (pc *PlaceController) RenderEditActivityForm(ctx *gin.Context) {
-// 	ctx.JSON(http.StatusOK, gin.H{
-// 		"title": "Update Activity Form",
-// 	})
-// }
+	// Ensure the ID is a valid integer
+	var places models.Place
+	if err := pc.DB.First(&places, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity"})
+		}
+		return
+	}
 
-// func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
-// 	id := ctx.Param("id")
-// 	var activities models.Activities
+	// Return the activity as JSON
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":            places.ID,
+		"name":          places.Name,
+		"vicinity":      places.Vicinity,
+		"city":          places.City,
+		"postcode":      places.Postcode,
+		"phone":         places.Phone,
+		"email":         places.Email,
+		"website":       places.Website,
+		"opening_hours": places.OpeningHours,
+		"description":   places.Description,
+		"type_id":       places.TypeID,
+		"type":          places.Type,
+		"rating":        places.Rating,
+		"latitude":      places.Latitude,
+		"longitude":     places.Longitude,
+	})
+}
 
-// 	if err := pc.DB.First(&activities, id).Error; err != nil {
-// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
-// 		return
-// 	}
+func (pc *PlaceController) RenderEditActivityForm(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"title": "Update Activity Form",
+	})
+}
 
-// 	if err := ctx.ShouldBind(&activities); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-// 		return
-// 	}
+func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var existingPlace models.Place
 
-// 	if err := pc.DB.Save(&activities).Error; err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update Activity"})
-// 		return
-// 	}
+	// Find the activity by ID
+	if err := pc.DB.First(&existingPlace, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity"})
+		}
+		return
+	}
 
-// 	ctx.JSON(http.StatusOK, activities)
-// }
+	// Bind JSON input to a new Place object to avoid overwriting the entire existingPlace
+	var input models.Place
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		return
+	}
 
-// func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
-// 	ctx.JSON(http.StatusOK, gin.H{
-// 		"title": "Delete Activity Form",
-// 	})
-// }
+	// Update only the fields provided in the request
+	if input.Name != "" {
+		existingPlace.Name = input.Name
+	}
+	if input.Vicinity != "" {
+		existingPlace.Vicinity = input.Vicinity
+	}
+	if input.City != "" {
+		existingPlace.City = input.City
+	}
+	if input.Postcode != "" {
+		existingPlace.Postcode = input.Postcode
+	}
+	if input.Phone != "" {
+		existingPlace.Phone = input.Phone
+	}
+	if input.Email != "" {
+		existingPlace.Email = input.Email
+	}
+	if input.Website != "" {
+		existingPlace.Website = input.Website
+	}
+	if input.OpeningHours != "" {
+		existingPlace.OpeningHours = input.OpeningHours
+	}
+	if input.Description != "" {
+		existingPlace.Description = input.Description
+	}
+	if input.TypeID != 0 {
+		existingPlace.TypeID = input.TypeID
+	}
+	if input.Type != "" {
+		existingPlace.Type = input.Type
+	}
+	if input.Rating != 0 {
+		existingPlace.Rating = input.Rating
+	}
+	if input.Latitude != 0 {
+		existingPlace.Latitude = input.Latitude
+	}
+	if input.Longitude != 0 {
+		existingPlace.Longitude = input.Longitude
+	}
 
-// func (pc *PlaceController) DeleteActivity(ctx *gin.Context) {
-// 	id := ctx.Param("id")
-// 	var activities models.Activities
-// 	if err := pc.DB.First(&activities, id).Error; err != nil {
-// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
-// 		return
-// 	}
-// 	pc.DB.Delete(&activities)
-// 	ctx.JSON(http.StatusOK, gin.H{"message": "Activity deleted"})
-// }
+	// Save the updated activity
+	if err := pc.DB.Save(&existingPlace).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update activity"})
+		return
+	}
+
+	// Respond with the updated activity
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":  "Activity updated successfully",
+		"activity": existingPlace,
+	})
+}
+
+func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"title": "Delete Activity Form",
+	})
+}
+
+func (pc *PlaceController) DeleteActivity(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var place models.Place
+
+	// Check if the activity exists
+	if err := pc.DB.First(&place, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity"})
+		}
+		return
+	}
+
+	// Delete the activity
+	if err := pc.DB.Delete(&place).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete activity"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Activity deleted successfully"})
+}
