@@ -81,6 +81,19 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		typeID, _ := strconv.ParseUint(ctx.Request.FormValue("typeID"), 10, 32)
 		placeFields.TypeID = uint(typeID)
 		placeFields.Type = ctx.Request.FormValue("type")
+
+		file, err := ctx.FormFile("logo")
+		if err == nil {
+			// Save the file
+			filePath := "./uploads/" + file.Filename
+			if err := ctx.SaveUploadedFile(file, filePath); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file: " + err.Error()})
+				return
+			}
+			log.Printf("File uploaded successfully: %s", filePath)
+		} else {
+			log.Printf("No file uploaded or error occurred: %v", err)
+		}
 	} else {
 		// Unsupported Content-Type
 		ctx.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported Content-Type"})
@@ -89,20 +102,6 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 	// Debug: Log parsed fields
 	log.Printf("Activity Text Fields: %+v\n", placeFields)
-
-	// Handle file uploads if multipart/form-data
-	var logoPath string
-	if strings.HasPrefix(contentType, "multipart/form-data") {
-		logoFile, logoHeader, err := ctx.Request.FormFile("logo")
-		if err == nil && logoFile != nil {
-			logoPath = "uploads/logos/" + logoHeader.Filename
-			if err := saveFile(logoFile, logoPath); err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo: " + err.Error()})
-				return
-			}
-			log.Printf("Logo saved at: %s", logoPath)
-		}
-	}
 
 	// Create activity object
 	activities := models.Place{
@@ -196,8 +195,22 @@ func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
 }
 
 func (pc *PlaceController) RenderEditActivityForm(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var existingPlace models.Place
+
+	// Find the activity by ID
+	if err := pc.DB.First(&existingPlace, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity"})
+		}
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"title": "Update Activity Form",
+		"title":    "Update Activity Form",
+		"activity": existingPlace,
 	})
 }
 
