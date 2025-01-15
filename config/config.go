@@ -33,6 +33,7 @@ func GetEnv(key string, fallback string) string {
 func SetupServer() *gin.Engine {
 	router := gin.Default()
 	router.Use(middleware.CORSMiddleware())
+	router.Static("/uploads", "./uploads")
 	return router
 }
 

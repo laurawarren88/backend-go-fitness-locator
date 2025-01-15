@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"io"
+	"fmt"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/laurawarren88/go_spa_backend.git/models"
@@ -86,22 +87,44 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		placeFields.Logo = ctx.Request.FormValue("logo")
 		placeFields.FacilitiesImage = ctx.Request.FormValue("facilities_image")
 
-		file, err := ctx.FormFile("logo")
-		if err == nil {
-			// Save the file
-			filePath := "./uploads/logos" + file.Filename
-			if err := ctx.SaveUploadedFile(file, filePath); err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file: " + err.Error()})
+		if logoFile, err := ctx.FormFile("logo"); err == nil {
+			sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(logoFile.Filename))
+			logoFilePath := "./uploads/logos/" + sanitizedFilename
+
+			if err := os.MkdirAll("./uploads/logos", os.ModePerm); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
 				return
 			}
-			log.Printf("File uploaded successfully: %s", filePath)
+
+			if err := ctx.SaveUploadedFile(logoFile, logoFilePath); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo file"})
+				return
+			}
+
+			placeFields.Logo = logoFilePath
 		} else {
-			log.Printf("No file uploaded or error occurred: %v", err)
+			log.Printf("No logo uploaded or error occurred: %v", err)
 		}
-	} else {
-		// Unsupported Content-Type
-		ctx.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported Content-Type"})
-		return
+
+		// Handle facilities image upload
+		if facilitiesImageFile, err := ctx.FormFile("facilities_image"); err == nil {
+			sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(facilitiesImageFile.Filename))
+			facilitiesImageFilePath := "./uploads/facilities/" + sanitizedFilename
+
+			if err := os.MkdirAll("./uploads/facilities", os.ModePerm); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
+				return
+			}
+
+			if err := ctx.SaveUploadedFile(facilitiesImageFile, facilitiesImageFilePath); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo file"})
+				return
+			}
+
+			placeFields.FacilitiesImage = facilitiesImageFilePath
+		} else {
+			log.Printf("No logo uploaded or error occurred: %v", err)
+		}
 	}
 
 	// Debug: Log parsed fields
@@ -153,17 +176,6 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 			"facilities_image": activities.FacilitiesImage,
 		},
 	})
-}
-
-func saveFile(file multipart.File, path string) error {
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, file)
-	return err
 }
 
 func (pc *PlaceController) GetPlaceLocator(ctx *gin.Context) {
@@ -225,6 +237,11 @@ func (pc *PlaceController) RenderEditActivityForm(ctx *gin.Context) {
 }
 
 func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
+	if ctx.Request.Method == "OPTIONS" {
+		ctx.Status(http.StatusOK)
+		return
+	}
+
 	id := ctx.Param("id")
 	var existingPlace models.Place
 
@@ -322,6 +339,11 @@ func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
 }
 
 func (pc *PlaceController) DeleteActivity(ctx *gin.Context) {
+	if ctx.Request.Method == "OPTIONS" {
+		ctx.Status(http.StatusOK)
+		return
+	}
+
 	id := ctx.Param("id")
 	var place models.Place
 
