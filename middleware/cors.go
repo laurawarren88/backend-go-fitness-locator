@@ -9,11 +9,12 @@ import (
 
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:5050"},
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{
 			"GET",
 			"POST",
 			"PUT",
+			"PATCH",
 			"DELETE",
 			"OPTIONS",
 		},
@@ -34,5 +35,6 @@ func CORSMiddleware() gin.HandlerFunc {
 		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
+		AllowWildcard:    true,
 	})
 }
