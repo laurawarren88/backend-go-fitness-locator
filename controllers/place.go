@@ -6,7 +6,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -48,8 +47,9 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		Website      string `form:"website" json:"website"`
 		OpeningHours string `form:"opening_hours" json:"opening_hours"`
 		Description  string `form:"description" json:"description"`
-		TypeID       uint   `form:"typeID" json:"typeID"`
 		Type         string `form:"type" json:"type"`
+		Latitude     string `form:"latitude" json:"latitude"`
+		Longitude    string `form:"longitude" json:"longitude"`
 	}
 
 	var placeFields PlaceTextFields
@@ -78,9 +78,9 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		placeFields.Website = ctx.Request.FormValue("website")
 		placeFields.OpeningHours = ctx.Request.FormValue("opening_hours")
 		placeFields.Description = ctx.Request.FormValue("description")
-		typeID, _ := strconv.ParseUint(ctx.Request.FormValue("typeID"), 10, 32)
-		placeFields.TypeID = uint(typeID)
 		placeFields.Type = ctx.Request.FormValue("type")
+		placeFields.Latitude = ctx.Request.FormValue("latitude")
+		placeFields.Longitude = ctx.Request.FormValue("longitude")
 
 		file, err := ctx.FormFile("logo")
 		if err == nil {
@@ -114,8 +114,9 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		Website:      placeFields.Website,
 		OpeningHours: placeFields.OpeningHours,
 		Description:  placeFields.Description,
-		TypeID:       placeFields.TypeID,
 		Type:         placeFields.Type,
+		Latitude:     placeFields.Latitude,
+		Longitude:    placeFields.Longitude,
 	}
 
 	// Save activity to the database
@@ -139,8 +140,9 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 			"website":       activities.Website,
 			"opening_hours": activities.OpeningHours,
 			"description":   activities.Description,
-			"typeID":        activities.TypeID,
 			"type":          activities.Type,
+			"latitude":      activities.Latitude,
+			"longitude":     activities.Longitude,
 		},
 	})
 }
@@ -186,9 +188,7 @@ func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
 		"website":       places.Website,
 		"opening_hours": places.OpeningHours,
 		"description":   places.Description,
-		"type_id":       places.TypeID,
 		"type":          places.Type,
-		"rating":        places.Rating,
 		"latitude":      places.Latitude,
 		"longitude":     places.Longitude,
 	})
@@ -263,19 +263,13 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 	if input.Description != "" {
 		existingPlace.Description = input.Description
 	}
-	if input.TypeID != 0 {
-		existingPlace.TypeID = input.TypeID
-	}
 	if input.Type != "" {
 		existingPlace.Type = input.Type
 	}
-	if input.Rating != 0 {
-		existingPlace.Rating = input.Rating
-	}
-	if input.Latitude != 0 {
+	if input.Latitude != "" {
 		existingPlace.Latitude = input.Latitude
 	}
-	if input.Longitude != 0 {
+	if input.Longitude != "" {
 		existingPlace.Longitude = input.Longitude
 	}
 
@@ -293,8 +287,21 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 }
 
 func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var existingPlace models.Place
+
+	if err := pc.DB.First(&existingPlace, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity"})
+		}
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"title": "Delete Activity Form",
+		"title":    "Delete Activity Form",
+		"activity": existingPlace,
 	})
 }
 
