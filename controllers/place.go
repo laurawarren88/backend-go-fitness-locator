@@ -38,18 +38,20 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 	// Define the structure for form and JSON binding
 	type PlaceTextFields struct {
-		Name         string `form:"name" json:"name"`
-		Vicinity     string `form:"vicinity" json:"vicinity"`
-		City         string `form:"city" json:"city"`
-		Postcode     string `form:"postcode" json:"postcode"`
-		Phone        string `form:"phone" json:"phone"`
-		Email        string `form:"email" json:"email"`
-		Website      string `form:"website" json:"website"`
-		OpeningHours string `form:"opening_hours" json:"opening_hours"`
-		Description  string `form:"description" json:"description"`
-		Type         string `form:"type" json:"type"`
-		Latitude     string `form:"latitude" json:"latitude"`
-		Longitude    string `form:"longitude" json:"longitude"`
+		Name            string `form:"name" json:"name"`
+		Vicinity        string `form:"vicinity" json:"vicinity"`
+		City            string `form:"city" json:"city"`
+		Postcode        string `form:"postcode" json:"postcode"`
+		Phone           string `form:"phone" json:"phone"`
+		Email           string `form:"email" json:"email"`
+		Website         string `form:"website" json:"website"`
+		OpeningHours    string `form:"opening_hours" json:"opening_hours"`
+		Description     string `form:"description" json:"description"`
+		Type            string `form:"type" json:"type"`
+		Latitude        string `form:"latitude" json:"latitude"`
+		Longitude       string `form:"longitude" json:"longitude"`
+		Logo            string `json:"logo" form:"logo" gorm:"size:255"`
+		FacilitiesImage string `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
 	}
 
 	var placeFields PlaceTextFields
@@ -81,11 +83,13 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		placeFields.Type = ctx.Request.FormValue("type")
 		placeFields.Latitude = ctx.Request.FormValue("latitude")
 		placeFields.Longitude = ctx.Request.FormValue("longitude")
+		placeFields.Logo = ctx.Request.FormValue("logo")
+		placeFields.FacilitiesImage = ctx.Request.FormValue("facilities_image")
 
 		file, err := ctx.FormFile("logo")
 		if err == nil {
 			// Save the file
-			filePath := "./uploads/" + file.Filename
+			filePath := "./uploads/logos" + file.Filename
 			if err := ctx.SaveUploadedFile(file, filePath); err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file: " + err.Error()})
 				return
@@ -105,18 +109,20 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 	// Create activity object
 	activities := models.Place{
-		Name:         placeFields.Name,
-		Vicinity:     placeFields.Vicinity,
-		City:         placeFields.City,
-		Postcode:     placeFields.Postcode,
-		Phone:        placeFields.Phone,
-		Email:        placeFields.Email,
-		Website:      placeFields.Website,
-		OpeningHours: placeFields.OpeningHours,
-		Description:  placeFields.Description,
-		Type:         placeFields.Type,
-		Latitude:     placeFields.Latitude,
-		Longitude:    placeFields.Longitude,
+		Name:            placeFields.Name,
+		Vicinity:        placeFields.Vicinity,
+		City:            placeFields.City,
+		Postcode:        placeFields.Postcode,
+		Phone:           placeFields.Phone,
+		Email:           placeFields.Email,
+		Website:         placeFields.Website,
+		OpeningHours:    placeFields.OpeningHours,
+		Description:     placeFields.Description,
+		Type:            placeFields.Type,
+		Latitude:        placeFields.Latitude,
+		Longitude:       placeFields.Longitude,
+		Logo:            placeFields.Logo,
+		FacilitiesImage: placeFields.FacilitiesImage,
 	}
 
 	// Save activity to the database
@@ -130,19 +136,21 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Activity created successfully",
 		"activities": gin.H{
-			"id":            activities.ID,
-			"name":          activities.Name,
-			"vicinity":      activities.Vicinity,
-			"city":          activities.City,
-			"postcode":      activities.Postcode,
-			"phone":         activities.Phone,
-			"email":         activities.Email,
-			"website":       activities.Website,
-			"opening_hours": activities.OpeningHours,
-			"description":   activities.Description,
-			"type":          activities.Type,
-			"latitude":      activities.Latitude,
-			"longitude":     activities.Longitude,
+			"id":               activities.ID,
+			"name":             activities.Name,
+			"vicinity":         activities.Vicinity,
+			"city":             activities.City,
+			"postcode":         activities.Postcode,
+			"phone":            activities.Phone,
+			"email":            activities.Email,
+			"website":          activities.Website,
+			"opening_hours":    activities.OpeningHours,
+			"description":      activities.Description,
+			"type":             activities.Type,
+			"latitude":         activities.Latitude,
+			"longitude":        activities.Longitude,
+			"logo":             activities.Logo,
+			"facilities_image": activities.FacilitiesImage,
 		},
 	})
 }
@@ -178,19 +186,21 @@ func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
 
 	// Return the activity as JSON
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":            places.ID,
-		"name":          places.Name,
-		"vicinity":      places.Vicinity,
-		"city":          places.City,
-		"postcode":      places.Postcode,
-		"phone":         places.Phone,
-		"email":         places.Email,
-		"website":       places.Website,
-		"opening_hours": places.OpeningHours,
-		"description":   places.Description,
-		"type":          places.Type,
-		"latitude":      places.Latitude,
-		"longitude":     places.Longitude,
+		"id":               places.ID,
+		"name":             places.Name,
+		"vicinity":         places.Vicinity,
+		"city":             places.City,
+		"postcode":         places.Postcode,
+		"phone":            places.Phone,
+		"email":            places.Email,
+		"website":          places.Website,
+		"opening_hours":    places.OpeningHours,
+		"description":      places.Description,
+		"type":             places.Type,
+		"latitude":         places.Latitude,
+		"longitude":        places.Longitude,
+		"logo":             places.Logo,
+		"facilities_image": places.FacilitiesImage,
 	})
 }
 
@@ -271,6 +281,12 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 	}
 	if input.Longitude != "" {
 		existingPlace.Longitude = input.Longitude
+	}
+	if input.Logo != "" {
+		existingPlace.Logo = input.Logo
+	}
+	if input.FacilitiesImage != "" {
+		existingPlace.FacilitiesImage = input.FacilitiesImage
 	}
 
 	// Save the updated activity

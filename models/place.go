@@ -14,8 +14,8 @@ type Place struct {
 	OpeningHours    string `json:"opening_hours" form:"opening_hours" gorm:"type:text"`
 	Type            string `json:"type" form:"type" gorm:"type:text"`
 	Description     string `json:"description" form:"description" gorm:"size:255" binding:"required"`
-	Photo           string `json:"photo" form:"photo" gorm:"size:255"`
-	FacilitiesImage string `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
 	Latitude        string `json:"latitude" form:"latitude"`
 	Longitude       string `json:"longitude" form:"longitude"`
+	Logo            string `json:"logo" form:"logo" gorm:"size:255"`
+	FacilitiesImage string `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
 }
