@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -57,21 +59,18 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 	var placeFields PlaceTextFields
 
-	// Detect Content-Type and process accordingly
 	contentType := ctx.GetHeader("Content-Type")
 	if strings.HasPrefix(contentType, "application/json") {
-		// Handle JSON payload
 		if err := ctx.ShouldBindJSON(&placeFields); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON input: " + err.Error()})
 			return
 		}
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
-		// Handle form data with file uploads
 		if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form: " + err.Error()})
 			return
 		}
-		// Extract form fields
+
 		placeFields.Name = ctx.Request.FormValue("name")
 		placeFields.Vicinity = ctx.Request.FormValue("vicinity")
 		placeFields.City = ctx.Request.FormValue("city")
@@ -245,7 +244,6 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var existingPlace models.Place
 
-	// Find the activity by ID
 	if err := pc.DB.First(&existingPlace, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
@@ -255,64 +253,87 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		return
 	}
 
-	// Bind JSON input to a new Place object to avoid overwriting the entire existingPlace
-	var input models.Place
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB max memory
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form data"})
 		return
 	}
 
-	// Update only the fields provided in the request
-	if input.Name != "" {
-		existingPlace.Name = input.Name
+	form := ctx.Request.MultipartForm
+
+	if name := form.Value["name"]; len(name) > 0 {
+		existingPlace.Name = name[0]
 	}
-	if input.Vicinity != "" {
-		existingPlace.Vicinity = input.Vicinity
+	if vicinity := form.Value["vicinity"]; len(vicinity) > 0 {
+		existingPlace.Vicinity = vicinity[0]
 	}
-	if input.City != "" {
-		existingPlace.City = input.City
+	if city := form.Value["city"]; len(city) > 0 {
+		existingPlace.City = city[0]
 	}
-	if input.Postcode != "" {
-		existingPlace.Postcode = input.Postcode
+	if postcode := form.Value["postcode"]; len(postcode) > 0 {
+		existingPlace.Postcode = postcode[0]
 	}
-	if input.Phone != "" {
-		existingPlace.Phone = input.Phone
+	if phone := form.Value["phone"]; len(phone) > 0 {
+		existingPlace.Phone = phone[0]
 	}
-	if input.Email != "" {
-		existingPlace.Email = input.Email
+	if email := form.Value["email"]; len(email) > 0 {
+		existingPlace.Email = email[0]
 	}
-	if input.Website != "" {
-		existingPlace.Website = input.Website
+	if website := form.Value["website"]; len(website) > 0 {
+		existingPlace.Website = website[0]
 	}
-	if input.OpeningHours != "" {
-		existingPlace.OpeningHours = input.OpeningHours
+	if openingHours := form.Value["opening_hours"]; len(openingHours) > 0 {
+		existingPlace.OpeningHours = openingHours[0]
 	}
-	if input.Description != "" {
-		existingPlace.Description = input.Description
+	if description := form.Value["description"]; len(description) > 0 {
+		existingPlace.Description = description[0]
 	}
-	if input.Type != "" {
-		existingPlace.Type = input.Type
+	if typeField := form.Value["type"]; len(typeField) > 0 {
+		existingPlace.Type = typeField[0]
 	}
-	if input.Latitude != "" {
-		existingPlace.Latitude = input.Latitude
+	if latitude := form.Value["latitude"]; len(latitude) > 0 {
+		existingPlace.Latitude = latitude[0]
 	}
-	if input.Longitude != "" {
-		existingPlace.Longitude = input.Longitude
+	if longitude := form.Value["longitude"]; len(longitude) > 0 {
+		existingPlace.Longitude = longitude[0]
 	}
-	if input.Logo != "" {
-		existingPlace.Logo = input.Logo
+	if files, ok := form.File["logo"]; ok && len(files) > 0 {
+		if existingPlace.Logo != "" {
+			if err := os.Remove(existingPlace.Logo); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete existing logo"})
+				return
+			}
+		}
+		file := files[0]
+		sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+		logoFilePath := "./uploads/logos/" + sanitizedFilename
+		if err := saveUploadedFile(file, logoFilePath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo"})
+			return
+		}
+		existingPlace.Logo = logoFilePath
 	}
-	if input.FacilitiesImage != "" {
-		existingPlace.FacilitiesImage = input.FacilitiesImage
+	if files, ok := form.File["facilities_image"]; ok && len(files) > 0 {
+		if existingPlace.FacilitiesImage != "" {
+			if err := os.Remove(existingPlace.FacilitiesImage); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete existing facilities image"})
+				return
+			}
+		}
+		file := files[0]
+		sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+		facilitiesImageFilePath := "./uploads/facilities/" + sanitizedFilename
+		if err := saveUploadedFile(file, facilitiesImageFilePath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save facilities image"})
+			return
+		}
+		existingPlace.FacilitiesImage = facilitiesImageFilePath
 	}
 
-	// Save the updated activity
 	if err := pc.DB.Save(&existingPlace).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update activity"})
 		return
 	}
 
-	// Respond with the updated activity
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":  "Activity updated successfully",
 		"activity": existingPlace,
@@ -395,4 +416,21 @@ func fileExists(filePath string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func saveUploadedFile(file *multipart.FileHeader, path string) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
 }
