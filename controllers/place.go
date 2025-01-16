@@ -123,7 +123,7 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 			placeFields.FacilitiesImage = facilitiesImageFilePath
 		} else {
-			log.Printf("No logo uploaded or error occurred: %v", err)
+			log.Printf("No facility image uploaded or error occurred: %v", err)
 		}
 	}
 
@@ -357,11 +357,42 @@ func (pc *PlaceController) DeleteActivity(ctx *gin.Context) {
 		return
 	}
 
-	// Delete the activity
+	if place.Logo != "" {
+		logoPath := place.Logo
+		// fmt.Println("Logo Path:", logoPath)
+		if fileExists(logoPath) {
+			// fmt.Println("File exists:", logoPath)
+			if err := os.Remove(logoPath); err != nil {
+				fmt.Printf("Failed to delete logo file: %s: %s\n", logoPath, err)
+			}
+		}
+	}
+
+	// Handle facilities image deletion
+	if place.FacilitiesImage != "" {
+		facilitiesPath := place.FacilitiesImage
+		// fmt.Println("Facilities Path:", facilitiesPath)
+		if fileExists(facilitiesPath) {
+			// fmt.Println("File exists:", facilitiesPath)
+			if err := os.Remove(facilitiesPath); err != nil {
+				fmt.Printf("Failed to delete facilities image file: %s: %s\n", facilitiesPath, err)
+			}
+		}
+	}
+
 	if err := pc.DB.Delete(&place).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete activity"})
 		return
 	}
 
+	fmt.Println("Request Method:", ctx.Request.Method)
 	ctx.JSON(http.StatusOK, gin.H{"message": "Activity deleted successfully"})
+}
+
+func fileExists(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
