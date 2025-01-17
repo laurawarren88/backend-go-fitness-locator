@@ -66,7 +66,7 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 			return
 		}
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
-		if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
+		if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form: " + err.Error()})
 			return
 		}
@@ -253,7 +253,7 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		return
 	}
 
-	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB max memory
+	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil { // 10 MB max memory
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form data"})
 		return
 	}
@@ -333,6 +333,9 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update activity"})
 		return
 	}
+
+	log.Printf("Received Form Values: %+v", form.Value)
+	log.Printf("Received Files: %+v", form.File)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":  "Activity updated successfully",
