@@ -7,7 +7,7 @@ import (
 )
 
 func RegisterUserRoutes(router *gin.Engine, uc *controllers.UserController) {
-	userRoutes := router.Group("/users")
+	userRoutes := router.Group("/api/users")
 	{
 		userRoutes.GET("/register", uc.GetSignupForm)
 		userRoutes.POST("/register", uc.SignupUser)
@@ -17,7 +17,7 @@ func RegisterUserRoutes(router *gin.Engine, uc *controllers.UserController) {
 		userRoutes.POST("/forgot_password", uc.ResetPassword)
 	}
 
-	protected := router.Group("/users")
+	protected := router.Group("/api/users")
 	protected.Use(middleware.AuthMiddleware())
 	{
 		protected.GET("/profile/:id", uc.GetProfile)

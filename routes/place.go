@@ -6,7 +6,7 @@ import (
 )
 
 func RegisterPlaceRoutes(router *gin.Engine, pc *controllers.PlaceController) {
-	placeRoutes := router.Group("/activities")
+	placeRoutes := router.Group("/api/activities")
 	{
 		placeRoutes.GET("/new", pc.RenderCreateActivityForm)
 		placeRoutes.POST("/new", pc.CreateActivity)

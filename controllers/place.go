@@ -253,7 +253,7 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		return
 	}
 
-	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil { // 10 MB max memory
+	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form data"})
 		return
 	}
