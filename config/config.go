@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/laurawarren88/go_spa_backend.git/controllers"
-	"github.com/laurawarren88/go_spa_backend.git/middleware"
 	"github.com/laurawarren88/go_spa_backend.git/routes"
 	"gorm.io/gorm"
 )
@@ -32,7 +31,6 @@ func GetEnv(key string, fallback string) string {
 
 func SetupServer() *gin.Engine {
 	router := gin.Default()
-	router.Use(middleware.CORSMiddleware())
 	router.Static("/images", "./uploads")
 	return router
 }
