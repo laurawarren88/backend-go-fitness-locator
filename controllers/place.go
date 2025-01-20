@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -41,20 +43,20 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 
 	// Define the structure for form and JSON binding
 	type PlaceTextFields struct {
-		Name            string `form:"name" json:"name"`
-		Vicinity        string `form:"vicinity" json:"vicinity"`
-		City            string `form:"city" json:"city"`
-		Postcode        string `form:"postcode" json:"postcode"`
-		Phone           string `form:"phone" json:"phone"`
-		Email           string `form:"email" json:"email"`
-		Website         string `form:"website" json:"website"`
-		OpeningHours    string `form:"opening_hours" json:"opening_hours"`
-		Description     string `form:"description" json:"description"`
-		Type            string `form:"type" json:"type"`
-		Latitude        string `form:"latitude" json:"latitude"`
-		Longitude       string `form:"longitude" json:"longitude"`
-		Logo            string `json:"logo" form:"logo" gorm:"size:255"`
-		FacilitiesImage string `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
+		Name            string  `form:"name" json:"name"`
+		Vicinity        string  `form:"vicinity" json:"vicinity"`
+		City            string  `form:"city" json:"city"`
+		Postcode        string  `form:"postcode" json:"postcode"`
+		Phone           string  `form:"phone" json:"phone"`
+		Email           string  `form:"email" json:"email"`
+		Website         string  `form:"website" json:"website"`
+		OpeningHours    string  `form:"opening_hours" json:"opening_hours"`
+		Description     string  `form:"description" json:"description"`
+		Type            string  `form:"type" json:"type"`
+		Latitude        float64 `form:"latitude" json:"latitude"`
+		Longitude       float64 `form:"longitude" json:"longitude"`
+		Logo            string  `json:"logo" form:"logo" gorm:"size:255"`
+		FacilitiesImage string  `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
 	}
 
 	var placeFields PlaceTextFields
@@ -81,8 +83,22 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		placeFields.OpeningHours = ctx.Request.FormValue("opening_hours")
 		placeFields.Description = ctx.Request.FormValue("description")
 		placeFields.Type = ctx.Request.FormValue("type")
-		placeFields.Latitude = ctx.Request.FormValue("latitude")
-		placeFields.Longitude = ctx.Request.FormValue("longitude")
+
+		// Parse latitude and longitude as float64
+		latitude, err := strconv.ParseFloat(ctx.Request.FormValue("latitude"), 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid latitude value"})
+			return
+		}
+		placeFields.Latitude = latitude
+
+		longitude, err := strconv.ParseFloat(ctx.Request.FormValue("longitude"), 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid longitude value"})
+			return
+		}
+		placeFields.Longitude = longitude
+
 		placeFields.Logo = ctx.Request.FormValue("logo")
 		placeFields.FacilitiesImage = ctx.Request.FormValue("facilities_image")
 
@@ -176,9 +192,45 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		},
 	})
 }
-
 func (pc *PlaceController) GetPlaceLocator(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "Locator Page"})
+	var places []models.Place
+	var filteredPlaces []models.Place
+
+	typeParam := ctx.Query("type")
+	latParam := ctx.Query("lat")
+	lngParam := ctx.Query("lng")
+	radiusParam := ctx.Query("radius")
+
+	// Retrieve all places from the database
+	result := pc.DB.Find(&places)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	// Optional filtering logic
+	for _, place := range places {
+		if typeParam != "" && place.Type != typeParam {
+			continue
+		}
+		if latParam != "" && lngParam != "" && radiusParam != "" {
+			// Calculate distance (e.g., Haversine formula) between place and coordinates
+			lat, _ := strconv.ParseFloat(latParam, 64)
+			lng, _ := strconv.ParseFloat(lngParam, 64)
+			radius, _ := strconv.ParseFloat(radiusParam, 64)
+
+			distance := calculateDistance(lat, lng, place.Latitude, place.Longitude)
+			if distance > radius {
+				continue
+			}
+		}
+		filteredPlaces = append(filteredPlaces, place)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"places":  places,
+		"message": "Locator Page",
+	})
 }
 
 func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
@@ -291,10 +343,16 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		existingPlace.Type = typeField[0]
 	}
 	if latitude := form.Value["latitude"]; len(latitude) > 0 {
-		existingPlace.Latitude = latitude[0]
+		lat, err := strconv.ParseFloat(latitude[0], 64)
+		if err == nil {
+			existingPlace.Latitude = lat
+		}
 	}
 	if longitude := form.Value["longitude"]; len(longitude) > 0 {
-		existingPlace.Longitude = longitude[0]
+		lon, err := strconv.ParseFloat(longitude[0], 64)
+		if err == nil {
+			existingPlace.Longitude = lon
+		}
 	}
 	if files, ok := form.File["logo"]; ok && len(files) > 0 {
 		if existingPlace.Logo != "" {
@@ -342,7 +400,6 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		"activity": existingPlace,
 	})
 }
-
 func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var existingPlace models.Place
@@ -436,4 +493,19 @@ func saveUploadedFile(file *multipart.FileHeader, path string) error {
 
 	_, err = io.Copy(dst, src)
 	return err
+}
+
+func calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
+	const earthRadius = 6371e3 // Earth radius in meters
+	lat1Rad := lat1 * math.Pi / 180
+	lat2Rad := lat2 * math.Pi / 180
+	deltaLat := (lat2 - lat1) * math.Pi / 180
+	deltaLon := (lon2 - lon1) * math.Pi / 180
+
+	a := math.Sin(deltaLat/2)*math.Sin(deltaLat/2) +
+		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
+			math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	return earthRadius * c
 }
