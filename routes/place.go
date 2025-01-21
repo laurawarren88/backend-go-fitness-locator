@@ -19,12 +19,12 @@ func RegisterPlaceRoutes(router *gin.Engine, pc *controllers.PlaceController) {
 		protected.GET("/new", pc.RenderCreateActivityForm)
 		protected.POST("/new", pc.CreateActivity)
 	}
-	adminRoutes := router.Group("/api/activities")
-	adminRoutes.Use(middleware.AuthMiddleware(), middleware.RequireAdmin())
+	userRoutes := router.Group("/api/activities")
+	userRoutes.Use(middleware.AuthMiddleware(), middleware.ActivityOwner())
 	{
-		adminRoutes.GET("/:id/edit", pc.RenderEditActivityForm)
-		adminRoutes.PUT("/:id/edit", pc.UpdateActivity)
-		adminRoutes.GET("/:id/delete", pc.RenderDeleteActivityForm)
-		adminRoutes.DELETE("/:id/delete", pc.DeleteActivity)
+		userRoutes.GET("/:id/edit", pc.RenderEditActivityForm)
+		userRoutes.PUT("/:id/edit", pc.UpdateActivity)
+		userRoutes.GET("/:id/delete", pc.RenderDeleteActivityForm)
+		userRoutes.DELETE("/:id/delete", pc.DeleteActivity)
 	}
 }
