@@ -1,4 +1,4 @@
-# **🏋️‍♂️Fitness Locator Applicatione🏃‍♀️**
+# **🏋️‍♂️Fitness Locator Application🏃‍♀️**
 
 ## Overview 🏂
 
