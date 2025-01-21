@@ -6,18 +6,18 @@ Welcome to the Fitness Locator application! This application helps users find lo
 
 ## Features 🏇
 
-🏉 Find Fitness Locations: Search for gyms, yoga studios, sports clubs, and other fitness-related locations by postcode and radius.
-🏉 Activity Details: View detailed information about each fitness-related activity, including the name, description, facilities, and contact details.
-🏉 User Authentication: Users can log in to manage their activities, and admins can manage all activities.
-🏉 Map Integration: A map displays the fitness locations with different icons for different types of fitness centers.
-🏉 Community Feel: The application encourages interaction and provides users with workout ideas and guidance.
+🏉 Find Fitness Locations: Search for gyms, yoga studios, sports clubs, and other fitness-related locations by postcode and radius.  
+🏉 Activity Details: View detailed information about each fitness-related activity, including the name, description, facilities, and contact details.  
+🏉 User Authentication: Users can log in to manage their activities, and admins can manage all activities.  
+🏉 Map Integration: A map displays the fitness locations with different icons for different types of fitness centers.  
+🏉 Community Feel: The application encourages interaction and provides users with workout ideas and guidance.  
 
 ## Technologies Used 🤿
 
-🏉 Backend: Go, Gin, GORM, PostgreSQL
-🏉 Frontend: React, JSX, Tailwind CSS
-🏉 Authentication: JWT (JSON Web Tokens) for secure authentication
-🏉 Database: PostgreSQL for storing user and activity data
+🏉 Backend: Go, Gin, GORM, PostgreSQL  
+🏉 Frontend: React, JSX, Tailwind CSS  
+🏉 Authentication: JWT (JSON Web Tokens) for secure authentication  
+🏉 Database: PostgreSQL for storing user and activity data  
 
 ## Project Structure 🥋
 
@@ -54,26 +54,26 @@ To run the Fitness Locator application locally, follow these steps:
 
 ## 1. 🥇 Backend Setup 🧗
 
-a. Change your directory to where you wish to run this script and store the cloned repository:
+A. Change your directory to where you wish to run this script and store the cloned repository:
 
 ```bash
 cd <filename>
 ```
 
-b. Clone the repository:
+B. Clone the repository:
 
 ```bash
 git clone https://github.com/laurawarren88/go_spa_backend_fitness_locator.git
 cd go_spa_backend_fitness_locator
 ```
 
-c. Install the required dependencies:
+C. Install the required dependencies:
 
 ```bash
 go mod tidy
 ```
 
-d. Set up the PostgreSQL database:
+D. Set up the PostgreSQL database:
 Create a database for the application.
 Configure the database connection in the .env file as below:
 
@@ -101,7 +101,7 @@ DB_PORT=<DB variables>
 ADMIN_PASSWORD=<password to set the admin user>
 ```
 
-e. Run the backend server:
+E. Run the backend server:
 
 ```bash
 go run main.go
@@ -109,21 +109,21 @@ go run main.go
 
 ## 2. 🥈 Frontend Setup 🤺
 
-a. Change your directory to where you wish to run this script and store the cloned repository:
+A. Change your directory to where you wish to run this script and store the cloned repository:
 
 ```bash
 git clone https://github.com/laurawarren88/react_frontend_fitness_locator.git
 cd <filename>
 ```
 
-b. Install the required dependencies:
+B. Install the required dependencies:
 
 ```bash
 npm install
 npm start
 ```
 
-c. Open your web browser to access the Fitness Locator application and navigate to:
+C. Open your web browser to access the Fitness Locator application and navigate to:
 
 ```text
 http://localhost:<port number> 
