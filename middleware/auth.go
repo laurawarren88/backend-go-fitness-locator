@@ -87,6 +87,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 			ctx.Set("userID", claims.UserID)
+			log.Println("Middleware set userID:", claims.UserID)
 			ctx.Set("isAdmin", claims.IsAdmin)
 			ctx.Next()
 		} else {

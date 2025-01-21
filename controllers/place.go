@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,8 +19,7 @@ import (
 )
 
 type PlaceController struct {
-	RateLimiter sync.Map
-	DB          *gorm.DB
+	DB *gorm.DB
 }
 
 func NewPlaceController(db *gorm.DB) *PlaceController {
@@ -35,13 +33,32 @@ func (pc *PlaceController) RenderCreateActivityForm(ctx *gin.Context) {
 }
 
 func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
-	// Handle preflight OPTIONS requests
 	if ctx.Request.Method == "OPTIONS" {
 		ctx.Status(http.StatusOK)
 		return
 	}
 
-	// Define the structure for form and JSON binding
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		log.Println("No userID found in context")
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userIDUint, ok := userID.(uint)
+	if !ok {
+		log.Printf("Failed to convert userID to uint: %v", userID)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	var user models.User
+	if err := pc.DB.First(&user, userIDUint).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	log.Printf("User found: %+v", user)
+
 	type PlaceTextFields struct {
 		Name            string  `form:"name" json:"name"`
 		Vicinity        string  `form:"vicinity" json:"vicinity"`
@@ -60,8 +77,8 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 	}
 
 	var placeFields PlaceTextFields
-
 	contentType := ctx.GetHeader("Content-Type")
+
 	if strings.HasPrefix(contentType, "application/json") {
 		if err := ctx.ShouldBindJSON(&placeFields); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON input: " + err.Error()})
@@ -84,7 +101,6 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		placeFields.Description = ctx.Request.FormValue("description")
 		placeFields.Type = ctx.Request.FormValue("type")
 
-		// Parse latitude and longitude as float64
 		latitude, err := strconv.ParseFloat(ctx.Request.FormValue("latitude"), 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid latitude value"})
@@ -121,7 +137,6 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 			log.Printf("No logo uploaded or error occurred: %v", err)
 		}
 
-		// Handle facilities image upload
 		if facilitiesImageFile, err := ctx.FormFile("facilities_image"); err == nil {
 			sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(facilitiesImageFile.Filename))
 			facilitiesImageFilePath := "./uploads/facilities/" + sanitizedFilename
@@ -132,7 +147,7 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 			}
 
 			if err := ctx.SaveUploadedFile(facilitiesImageFile, facilitiesImageFilePath); err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo file"})
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save facilities image"})
 				return
 			}
 
@@ -142,11 +157,14 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		}
 	}
 
-	// Debug: Log parsed fields
+	if placeFields.Name == "" || placeFields.Latitude == 0 || placeFields.Longitude == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields"})
+		return
+	}
+
 	log.Printf("Activity Text Fields: %+v\n", placeFields)
 
-	// Create activity object
-	activities := models.Place{
+	activity := models.Place{
 		Name:            placeFields.Name,
 		Vicinity:        placeFields.Vicinity,
 		City:            placeFields.City,
@@ -161,75 +179,75 @@ func (pc *PlaceController) CreateActivity(ctx *gin.Context) {
 		Longitude:       placeFields.Longitude,
 		Logo:            placeFields.Logo,
 		FacilitiesImage: placeFields.FacilitiesImage,
+		UserID:          userIDUint,
 	}
 
-	// Save activity to the database
-	if err := pc.DB.Create(&activities).Error; err != nil {
+	if err := pc.DB.Create(&activity).Error; err != nil {
 		log.Println("Error saving to database:", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create activity"})
 		return
 	}
 
-	// Respond with success
+	// After creating the activity
+	if err := pc.DB.Preload("User").First(&activity, activity.ID).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity with user details"})
+		return
+	}
+
 	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "Activity created successfully",
-		"activities": gin.H{
-			"id":               activities.ID,
-			"name":             activities.Name,
-			"vicinity":         activities.Vicinity,
-			"city":             activities.City,
-			"postcode":         activities.Postcode,
-			"phone":            activities.Phone,
-			"email":            activities.Email,
-			"website":          activities.Website,
-			"opening_hours":    activities.OpeningHours,
-			"description":      activities.Description,
-			"type":             activities.Type,
-			"latitude":         activities.Latitude,
-			"longitude":        activities.Longitude,
-			"logo":             activities.Logo,
-			"facilities_image": activities.FacilitiesImage,
-		},
+		"message":  "Activity created successfully",
+		"activity": activity,
 	})
 }
+
 func (pc *PlaceController) GetPlaceLocator(ctx *gin.Context) {
 	var places []models.Place
 	var filteredPlaces []models.Place
+
+	// Add debug logging for initial query
+	log.Printf("Starting place lookup")
+
+	result := pc.DB.Preload("User").Find(&places)
+	if result.Error != nil {
+		log.Printf("Database error: %v", result.Error)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	log.Printf("Found %d places in database", len(places))
 
 	typeParam := ctx.Query("type")
 	latParam := ctx.Query("lat")
 	lngParam := ctx.Query("lng")
 	radiusParam := ctx.Query("radius")
 
-	// Retrieve all places from the database
-	result := pc.DB.Find(&places)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
+	// Only filter if we have coordinates and radius
+	if latParam != "" && lngParam != "" && radiusParam != "" {
+		lat, _ := strconv.ParseFloat(latParam, 64)
+		lng, _ := strconv.ParseFloat(lngParam, 64)
+		radius, _ := strconv.ParseFloat(radiusParam, 64)
 
-	// Optional filtering logic
-	for _, place := range places {
-		if typeParam != "" && place.Type != typeParam {
-			continue
-		}
-		if latParam != "" && lngParam != "" && radiusParam != "" {
-			// Calculate distance (e.g., Haversine formula) between place and coordinates
-			lat, _ := strconv.ParseFloat(latParam, 64)
-			lng, _ := strconv.ParseFloat(lngParam, 64)
-			radius, _ := strconv.ParseFloat(radiusParam, 64)
-
-			distance := calculateDistance(lat, lng, place.Latitude, place.Longitude)
-			if distance > radius {
+		for _, place := range places {
+			// Type filter (case insensitive)
+			if typeParam != "" && !strings.EqualFold(place.Type, typeParam) {
 				continue
 			}
+
+			distance := calculateDistance(lat, lng, place.Latitude, place.Longitude)
+			log.Printf("Distance for place %s: %f meters", place.Name, distance)
+
+			if distance <= radius {
+				filteredPlaces = append(filteredPlaces, place)
+			}
 		}
-		filteredPlaces = append(filteredPlaces, place)
 	}
 
+	log.Printf("Filtered to %d places", len(filteredPlaces))
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"places":  places,
+		"places":  filteredPlaces,
 		"message": "Locator Page",
+		"total":   len(filteredPlaces),
 	})
 }
 
@@ -237,8 +255,8 @@ func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	// Ensure the ID is a valid integer
-	var places models.Place
-	if err := pc.DB.First(&places, "id = ?", id).Error; err != nil {
+	var place models.Place
+	if err := pc.DB.Preload("User").First(&place, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
 		} else {
@@ -249,21 +267,23 @@ func (pc *PlaceController) GetActivityById(ctx *gin.Context) {
 
 	// Return the activity as JSON
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":               places.ID,
-		"name":             places.Name,
-		"vicinity":         places.Vicinity,
-		"city":             places.City,
-		"postcode":         places.Postcode,
-		"phone":            places.Phone,
-		"email":            places.Email,
-		"website":          places.Website,
-		"opening_hours":    places.OpeningHours,
-		"description":      places.Description,
-		"type":             places.Type,
-		"latitude":         places.Latitude,
-		"longitude":        places.Longitude,
-		"logo":             places.Logo,
-		"facilities_image": places.FacilitiesImage,
+		"id":               place.ID,
+		"name":             place.Name,
+		"vicinity":         place.Vicinity,
+		"city":             place.City,
+		"postcode":         place.Postcode,
+		"phone":            place.Phone,
+		"email":            place.Email,
+		"website":          place.Website,
+		"opening_hours":    place.OpeningHours,
+		"description":      place.Description,
+		"type":             place.Type,
+		"latitude":         place.Latitude,
+		"longitude":        place.Longitude,
+		"logo":             place.Logo,
+		"facilities_image": place.FacilitiesImage,
+		"userID":           place.UserID,
+		"user":             place.User,
 	})
 }
 
@@ -363,6 +383,7 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		}
 		file := files[0]
 		sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+		sanitizedFilename = filepath.Clean(sanitizedFilename)
 		logoFilePath := "./uploads/logos/" + sanitizedFilename
 		if err := saveUploadedFile(file, logoFilePath); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo"})
@@ -379,12 +400,20 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		}
 		file := files[0]
 		sanitizedFilename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+		sanitizedFilename = filepath.Clean(sanitizedFilename)
 		facilitiesImageFilePath := "./uploads/facilities/" + sanitizedFilename
 		if err := saveUploadedFile(file, facilitiesImageFilePath); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save facilities image"})
 			return
 		}
 		existingPlace.FacilitiesImage = facilitiesImageFilePath
+	}
+
+	if UserID := form.Value["userID"]; len(UserID) > 0 {
+		userID, err := strconv.Atoi(UserID[0])
+		if err == nil {
+			existingPlace.UserID = uint(userID)
+		}
 	}
 
 	if err := pc.DB.Save(&existingPlace).Error; err != nil {
@@ -400,6 +429,7 @@ func (pc *PlaceController) UpdateActivity(ctx *gin.Context) {
 		"activity": existingPlace,
 	})
 }
+
 func (pc *PlaceController) RenderDeleteActivityForm(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var existingPlace models.Place

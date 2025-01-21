@@ -18,4 +18,6 @@ type Place struct {
 	Longitude       float64 `json:"longitude" form:"longitude"`
 	Logo            string  `json:"logo" form:"logo" gorm:"size:255"`
 	FacilitiesImage string  `json:"facilities_image" form:"facilities_image" gorm:"size:255"`
+	UserID          uint    `json:"user_id" form:"user_id"`
+	User            User    `json:"user" form:"user" gorm:"foreignKey:UserID"`
 }
