@@ -26,6 +26,26 @@ func NewPlaceController(db *gorm.DB) *PlaceController {
 	return &PlaceController{DB: db}
 }
 
+func (pc *PlaceController) CheckActivityOwnership(ctx *gin.Context) {
+	userID, _ := ctx.Get("userID")
+	activityID := ctx.Param("id")
+
+	var place models.Place
+	if err := pc.DB.Where("id = ?", activityID).First(&place).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"isOwner": false})
+		return
+	}
+
+	var user models.User
+	if err := pc.DB.First(&user, userID).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"isOwner": false})
+		return
+	}
+
+	isOwner := place.UserID == userID.(uint) || user.IsAdmin
+	ctx.JSON(http.StatusOK, gin.H{"isOwner": isOwner})
+}
+
 func (pc *PlaceController) RenderCreateActivityForm(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"title": "Create a New Activity",

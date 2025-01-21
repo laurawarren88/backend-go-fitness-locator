@@ -7,6 +7,8 @@ import (
 )
 
 func RegisterPlaceRoutes(router *gin.Engine, pc *controllers.PlaceController) {
+	router.GET("/api/activities/:id/check-ownership", middleware.AuthMiddleware(), pc.CheckActivityOwnership)
+
 	placeRoutes := router.Group("/api/activities")
 	{
 		placeRoutes.GET("/locator", pc.GetPlaceLocator)
