@@ -82,6 +82,7 @@ func (uc *UserController) GetLoginForm(ctx *gin.Context) {
 }
 
 func (uc *UserController) LoginUser(ctx *gin.Context) {
+	log.Printf("LoginUser endpoint hit")
 	var loginRequest struct {
 		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`

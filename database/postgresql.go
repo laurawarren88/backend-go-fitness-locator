@@ -14,12 +14,11 @@ import (
 var DB *gorm.DB
 
 func ConnectToDB() {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
+	// Change db to localhost if running locally of machine and not from docker
+	dsn := fmt.Sprintf("host=db user=%s password=%s dbname=%s port=5432 sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PORT"),
 	)
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -27,6 +26,7 @@ func ConnectToDB() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	log.Println("Database connection established")
+	log.Printf("DSN: %s", dsn)
 
 	if err := DB.AutoMigrate(&models.User{}, &models.Place{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
@@ -67,7 +67,7 @@ func SetupAdminUser(db *gorm.DB) error {
 		if err := db.Save(&existingUser).Error; err != nil {
 			return err
 		}
-		// log.Println("Admin user updated successfully")
+		log.Println("Admin user updated successfully")
 	} else {
 		return result.Error
 	}
