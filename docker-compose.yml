@@ -1,35 +1,39 @@
 services:
-  api:
-    build: .
-    env_file:
-      - .env
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/app
-    networks:
-      - fitness-network
-    command:
-      - air
-      - -c
-      - .air.toml
-
   db:
-    image: postgres:alpine
+    image: postgres:latest
+    container_name: fitness_db
+    restart: always
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Renegade187!
+      POSTGRES_DB: gormproject
     ports:
       - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
     networks:
       - fitness-network
-    volumes:
-      - postgres-db:/var/lib/postgresql/data
 
-volumes:
-  postgres-db:
+  api:
+    build:
+      context: .
+    container_name: fitness_api
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: Renegade187!
+      DB_NAME: gormproject
+      DB_PORT: 5432
+    ports:
+      - "8080:8080"
+    networks:
+      - fitness-network
 
 networks:
   fitness-network:
-    external: true
+    driver: bridge
+
+volumes:
+  db-data:
