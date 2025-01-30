@@ -15,7 +15,9 @@ var DB *gorm.DB
 
 func ConnectToDB() {
 	// Change db to localhost if running locally of machine and not from docker
-	dsn := fmt.Sprintf("host=db user=%s password=%s dbname=%s port=5432 sslmode=disable",
+	// dsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=5432 sslmode=disable",
+	// dsn := fmt.Sprintf("host=db user=%s password=%s dbname=%s port=5432 sslmode=disable",
+	dsn := fmt.Sprintf("host=postgres-service.fitness-locator.svc.cluster.local user=%s password=%s dbname=%s port=5432 sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
