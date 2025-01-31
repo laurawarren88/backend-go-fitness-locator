@@ -6,5 +6,5 @@ import (
 )
 
 func RegisterHomeRoutes(router *gin.Engine, hc *controllers.HomeController) {
-	router.GET("/api/home", hc.GetHome)
+	router.GET("/api/", hc.GetHome)
 }
