@@ -134,5 +134,3 @@ http://localhost:<port number>
 1. Search for Fitness Locations: Enter a postcode and select a radius to search for nearby fitness-related locations.
 2. View Activity Details: Click on a specific fitness location to view its detailed information, including description, facilities, contact details, and opening hours.
 3. Log in to Manage Activities: Users can log in to create, update, or delete activities they own. Admin users can manage all activities.
-
-test again
