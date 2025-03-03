@@ -1,11 +1,9 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/laurawarren88/go_spa_backend.git/controllers"
 	"github.com/laurawarren88/go_spa_backend.git/middleware"
 	"github.com/laurawarren88/go_spa_backend.git/routes"
@@ -13,9 +11,9 @@ import (
 )
 
 func LoadEnv() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 }
 
 func SetGinMode() {

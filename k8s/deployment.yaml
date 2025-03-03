@@ -49,6 +49,65 @@ spec:
             secretKeyRef:
               name: postgres-secret
               key: POSTGRES_DB
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: ADMIN_PASSWORD
+
+        - name: PORT
+          valueFrom:
+            secretKeyRef:
+              name: port-secret
+              key: PORT
+        
+        - name: ACCESS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: ACCESS_SECRET_KEY
+        - name: REFRESH_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secrets
+              key: REFRESH_SECRET_KEY
+        
+        - name: ENV
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: ENV
+        - name: DEV_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: DEV_DOMAIN
+        - name: DEV_SECURE_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: DEV_SECURE_COOKIE
+        - name: DEV_HTTP_ONLY_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: DEV_HTTP_ONLY_COOKIE
+        - name: PROD_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: PROD_DOMAIN
+        - name: PROD_SECURE_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: PROD_SECURE_COOKIE
+        - name: PROD_HTTP_ONLY_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: cookie-secret
+              key: PROD_HTTP_ONLY_COOKIE
+        
         readinessProbe:
           httpGet:
             path: /api/

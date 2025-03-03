@@ -4,5 +4,10 @@ dist
 dist-ssr
 *.local
 
+/k8s/jwt-secret.yaml
+/k8s/postgres-secret.yaml
+/k8s/cookie-secret.yaml
+/k8s/port-secret.yaml
+
 # Editor directories and files
 .vscode/*
