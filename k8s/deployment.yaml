@@ -23,7 +23,7 @@ spec:
       - name: backend
         image: lmwcode/fitness_locator-api:V1.0.0
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
           name: http
           protocol: TCP
         resources:
@@ -52,7 +52,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /api/
-            port: 8080
+            port: 8081
           initialDelaySeconds: 5
           timeoutSeconds: 10
           periodSeconds: 120
@@ -60,7 +60,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/
-            port: 8080
+            port: 8081
           initialDelaySeconds: 5
           timeoutSeconds: 10
           periodSeconds: 120

@@ -25,8 +25,8 @@ func main() {
 
 	config.SetupHandlers(router, db)
 
-	fmt.Printf("Starting the server on port %s\n", config.GetEnv("PORT", "8080"))
-	if err := router.Run(":" + config.GetEnv("PORT", "8080")); err != nil {
+	fmt.Printf("Starting the server on port %s\n", config.GetEnv("PORT", "8081"))
+	if err := router.Run(":" + config.GetEnv("PORT", "8081")); err != nil {
 		log.Fatal("Failed to start the server:", err)
 	}
 }

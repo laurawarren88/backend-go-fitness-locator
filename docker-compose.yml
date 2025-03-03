@@ -12,7 +12,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     networks:
-      - fitness-network
+      - lmwprac
 
   api:
     build:
@@ -27,12 +27,12 @@ services:
       DB_NAME: gormproject
       DB_PORT: 5432
     ports:
-      - "8080:8080"
+      - "8081:8081"
     networks:
-      - fitness-network
+      - lmwprac
 
 networks:
-  fitness-network:
+  lmwprac:
     driver: bridge
 
 volumes:
