@@ -5,6 +5,10 @@ metadata:
   namespace: lmwprac
   labels:
     app: backend
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-namespace: lmwprac
 spec:
   replicas: 1
   selector:

@@ -5,6 +5,10 @@ metadata:
   namespace: lmwprac
   labels:
     app: postgres
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-namespace: lmwprac
 spec:
   accessModes:
     - ReadWriteOnce
@@ -17,6 +21,11 @@ kind: PersistentVolume
 metadata:
   name: postgres-pv
   namespace: lmwprac
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-namespace: lmwprac
 spec:
   capacity:
     storage: 1Gi  
@@ -31,6 +40,11 @@ kind: Deployment
 metadata:
   name: postgres-deployment
   namespace: lmwprac
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-namespace: lmwprac
 spec:
   replicas: 1
   selector:
@@ -95,6 +109,11 @@ kind: Service
 metadata:
   name: postgres-service
   namespace: lmwprac
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-namespace: lmwprac
 spec:
   selector:
     app: postgres
