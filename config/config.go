@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/gin-gonic/gin"
 	"github.com/laurawarren88/go_spa_backend.git/controllers"
 	"github.com/laurawarren88/go_spa_backend.git/middleware"
@@ -10,22 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func LoadEnv() {
-	// if err := godotenv.Load(); err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
-}
-
 func SetGinMode() {
 	gin.SetMode(gin.ReleaseMode)
-}
-
-func GetEnv(key string, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return fallback
-	}
-	return value
 }
 
 func SetupServer() *gin.Engine {
