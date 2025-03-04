@@ -7,7 +7,7 @@ metadata:
     app: postgres
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-name: go-backend-fitness-locator
     meta.helm.sh/release-namespace: lmwprac
 spec:
   accessModes:
@@ -24,7 +24,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-name: go-backend-fitness-locator
     meta.helm.sh/release-namespace: lmwprac
 spec:
   capacity:
@@ -43,7 +43,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-name: go-backend-fitness-locator
     meta.helm.sh/release-namespace: lmwprac
 spec:
   replicas: 1
@@ -112,7 +112,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: react-frontend-fitness-locator
+    meta.helm.sh/release-name: go-backend-fitness-locator
     meta.helm.sh/release-namespace: lmwprac
 spec:
   selector:
