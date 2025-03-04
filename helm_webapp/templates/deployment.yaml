@@ -22,6 +22,7 @@ spec:
       containers:
       - name: backend
         image: lmwcode/fitness_locator-api:V1.0.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 8081
           name: http
