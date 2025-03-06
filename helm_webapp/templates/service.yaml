@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: backend-lmw-service
   namespace: lmwprac
   labels:
     app.kubernetes.io/managed-by: Helm

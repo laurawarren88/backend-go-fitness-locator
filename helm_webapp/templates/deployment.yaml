@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: backend-lmw-deployment
   namespace: lmwprac
   labels:
     app: backend
@@ -42,75 +42,75 @@ spec:
         - name: DB_USER
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
+              name: postgres-lmw-secret
               key: POSTGRES_USER
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
+              name: postgres-lmw-secret
               key: POSTGRES_PASSWORD
         - name: DB_NAME
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
+              name: postgres-lmw-secret
               key: POSTGRES_DB
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
+              name: postgres-lmw-secret
               key: ADMIN_PASSWORD
 
         - name: PORT
           valueFrom:
             secretKeyRef:
-              name: port-secret
+              name: port-lmw-secret
               key: PORT
         
         - name: ACCESS_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
+              name: jwt-lmw-secret
               key: ACCESS_SECRET_KEY
         - name: REFRESH_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
+              name: jwt-lmw-secret
               key: REFRESH_SECRET_KEY
         
         - name: ENV
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: ENV
         - name: DEV_DOMAIN
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: DEV_DOMAIN
         - name: DEV_SECURE_COOKIE
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: DEV_SECURE_COOKIE
         - name: DEV_HTTP_ONLY_COOKIE
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: DEV_HTTP_ONLY_COOKIE
         - name: PROD_DOMAIN
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: PROD_DOMAIN
         - name: PROD_SECURE_COOKIE
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: PROD_SECURE_COOKIE
         - name: PROD_HTTP_ONLY_COOKIE
           valueFrom:
             secretKeyRef:
-              name: cookie-secret
+              name: cookie-lmw-secret
               key: PROD_HTTP_ONLY_COOKIE
         
         readinessProbe:
