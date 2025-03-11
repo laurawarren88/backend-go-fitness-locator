@@ -117,7 +117,7 @@ metadata:
     meta.helm.sh/release-namespace: lmwprac
 spec:
   selector:
-    app: postgres
+    app: postgres-lmw
   ports:
   - port: 5432
     targetPort: 5432

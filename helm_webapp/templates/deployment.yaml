@@ -22,7 +22,7 @@ spec:
       initContainers:
       - name: wait-for-postgres
         image: busybox
-        command: ['sh', '-c', 'until nc -z postgres-service 5432; do echo waiting for postgres; sleep 2; done;']
+        command: ['sh', '-c', 'until nc -z postgres-lmw-service 5432; do echo waiting for postgres; sleep 2; done;']
       containers:
       - name: backend
         image: lmwcode/fitness_locator-api:V1.0.0
