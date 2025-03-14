@@ -9,10 +9,10 @@ dist-ssr
 /k8s/cookie-secret.yaml
 /k8s/port-secret.yaml
 
-/helm_chart/templates/jwt-secret.yaml
-/helm_chart/templates/postgres-secret.yaml
-/helm_chart/templates/cookie-secret.yaml
-/helm_chart/templates/port-secret.yaml
+helm_chart/templates/jwt-secret.yaml
+helm_chart/templates/postgres-secret.yaml
+helm_chart/templates/cookie-secret.yaml
+helm_chart/templates/port-secret.yaml
 
 # Editor directories and files
 .vscode/*
