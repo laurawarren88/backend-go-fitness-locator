@@ -8,13 +8,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: {{ .Values.webserver.host }}
+    - host: {{ .Values.api.host }}
       http:
         paths:
-          - path: {{ .Values.webserver.path }}
-            pathType: {{ .Values.webserver.pathType }}
+          - path: {{ .Values.api.path }}
+            pathType: {{ .Values.api.pathType }}
             backend:
               service:
                 name: {{ .Values.namespace }}-backend-service
                 port:
-                  number: {{ .Values.webserver.port }}
+                  number: {{ .Values.api.port }}
