@@ -59,17 +59,17 @@ spec:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-backend-secrets
+              name: backend-secrets
               key: DB_PASSWORD
         - name: ACCESS_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-backend-secrets
+              name: backend-secrets
               key: ACCESS_SECRET_KEY
         - name: REFRESH_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-backend-secrets
+              name: backend-secrets
               key: REFRESH_SECRET_KEY
         - name: ENV
           valueFrom:
