@@ -2,7 +2,7 @@ namespace: lmw-fitness
 GO_ENV: production
 
 api:
-  port: 8081
+  port: 8082
   type: NodePort  
   nodePort: 30260
   host: api.lmw-fitness.com

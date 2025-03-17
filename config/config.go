@@ -46,6 +46,7 @@ func SetupServer() *gin.Engine {
 	router := gin.Default()
 	router.Static("/images", "./images")
 	router.Use(middleware.DBMiddleware())
+	router.Use(middleware.CORSMiddleware())
 	return router
 }
 
