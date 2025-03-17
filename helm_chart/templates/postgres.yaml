@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:latest
+        image: postgres:15
         ports:
         - containerPort: {{ .Values.database.port }}
         resources:
