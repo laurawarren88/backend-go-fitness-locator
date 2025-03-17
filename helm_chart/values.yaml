@@ -5,6 +5,7 @@ api:
   port: 8081
   type: NodePort  
   nodePort: 30260
+  host: api.lmw-fitness.com
   path: /api/
   pathType: ImplementationSpecific
 
