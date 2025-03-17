@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
+	config.LoadEnv()
 	config.SetGinMode()
 }
 
@@ -24,9 +25,10 @@ func main() {
 
 	config.SetupHandlers(router, db)
 
-	const port = "8081"
-
+	port := config.GetEnv("PORT", "8081")
 	fmt.Printf("Starting the server on port %s\n", port)
+
+	// Start the server on the specified port
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start the server:", err)
 	}

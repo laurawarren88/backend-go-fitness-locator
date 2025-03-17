@@ -8,7 +8,7 @@ import (
 )
 
 func GetCookieSettings() (string, bool, bool, error) {
-	env := os.Getenv("ENV")
+	env := os.Getenv("GO_ENV")
 
 	var domain string
 	var secure, httpOnly bool
