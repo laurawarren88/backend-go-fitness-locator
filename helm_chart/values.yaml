@@ -1,0 +1,36 @@
+namespace: lmw-fitness
+GO_ENV: production
+
+api:
+  port: 8081
+  type: NodePort  
+  nodePort: 30260
+  path: /api/
+  pathType: ImplementationSpecific
+
+image:
+  repository: lmwcode/lmw_fitness_api
+  pullPolicy: Always
+
+replicaCount: 1
+
+database:
+  name: gormproject
+  user: postgres
+  port: 5432
+  type: ClusterIP
+  sslMode: disable
+
+storage:
+  storageClass: standard
+
+livenessProbe:
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+readinessProbe:
+  initialDelaySeconds: 15
+  timeoutSeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-postgres-pvc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Release.Name }}-postgres-service
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}-backend-deployment
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+spec:
+  volumeName: {{ .Release.Name }}-postgres-pv
+  storageClassName: {{ .Values.storage.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-postgres-pv
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}-backend-deployment
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: {{ .Values.storage.storageClass }}
+  capacity:
+    storage: 1Gi  
+  accessModes:
+    - ReadWriteOnce  
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data" 

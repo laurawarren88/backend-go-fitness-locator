@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-backend-configmap
+  namespace: {{ .Values.namespace }}
+data:
+  GO_ENV: "{{ .Values.env }}"
+  PORT: "{{ .Values.api.port }}"
+  DB_HOST: "{{ .Release.Name }}-postgres-service"
+  DB_USER: "{{ .Values.database.user }}"
+  DB_NAME: "{{ .Values.database.name }}"
+  DB_PORT: "{{ .Values.database.port }}"
+  DB_SSLMODE: "{{ .Values.database.sslMode }}"
+  STORAGE_CLASS: "{{ .Values.storage.storageClass }}"
