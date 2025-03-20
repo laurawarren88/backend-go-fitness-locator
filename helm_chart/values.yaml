@@ -23,7 +23,7 @@ database:
   sslMode: disable
 
 storage:
-  storageClass: standard
+  storageClass: nfs-csi
 
 livenessProbe:
   initialDelaySeconds: 30
