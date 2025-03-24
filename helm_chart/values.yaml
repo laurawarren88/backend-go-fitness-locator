@@ -10,7 +10,7 @@ api:
   pathType: ImplementationSpecific
 
 image:
-  repository: lmwcode/go-backend-fitness-locator:latest
+  repository: lmwcode/go-backend-fitness-locator:e632506a358f4d6d3fcf0f15d46830d1343f931a
   pullPolicy: Always
 
 replicaCount: 1
