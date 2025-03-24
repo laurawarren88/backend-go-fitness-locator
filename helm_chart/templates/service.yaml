@@ -12,7 +12,7 @@ spec:
   selector:
     app: backend
   ports:
-  - port: {{ .Values.api.servicePort }}
+  - port: {{ .Values.api.port }}
     targetPort: {{ .Values.api.port }}
     protocol: TCP
     nodePort: {{ .Values.api.nodePort }}

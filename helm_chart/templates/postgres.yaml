@@ -88,7 +88,7 @@ spec:
   selector:
     app: {{ .Release.Name }}-postgres
   ports:
-  - port: {{ .Values.database.port }}
+  - port: {{ .Values.database.servicePort }}
     targetPort: {{ .Values.database.port }}
     protocol: TCP
   type: {{ .Values.database.type }}
