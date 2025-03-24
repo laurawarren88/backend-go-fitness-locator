@@ -2,7 +2,7 @@ namespace: lmw-fitness
 GO_ENV: production
 
 api:
-  port: 8082
+  port: 8081
   type: NodePort  
   nodePort: 30260
   host: api.lmw-fitness.com
@@ -19,6 +19,7 @@ database:
   name: gormproject
   user: postgres
   port: 5432
+  servicePort: 5433
   type: ClusterIP
   sslMode: disable
 
