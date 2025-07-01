@@ -30,6 +30,15 @@ secrets:
   refreshKey: <+secrets.getValue("REFRESH_SECRET_KEY")>
   adminPassword: <+secrets.getValue("ADMIN_PASSWORD")>
 
+cookies:
+  env: development
+  devDomain: http://localhost:5050
+  devSecureCookie: false
+  devHttpOnlyCookie: false
+  prodDomain: http://172.16.6.178:5050
+  prodSecureCookie: true
+  prodHttpOnlyCookie: true
+
 storage:
   storageClass: nfs-csi
 
