@@ -1,17 +1,18 @@
-namespace: lmw-fitness
+namespace: lmw-harness
 GO_ENV: production
 
 api:
   port: 8081
-  type: NodePort  
+  type: NodePort
   nodePort: 30260
   host: api.lmw-fitness.com
   path: /api/
   pathType: ImplementationSpecific
 
 image:
-  repository: lmwcode/go-backend-fitness-locator:e632506a358f4d6d3fcf0f15d46830d1343f931a
+  repository: lmwcode/backend-go-fitness-locator
   pullPolicy: Always
+  tag: v.<+pipeline.sequenceId>
 
 replicaCount: 1
 
@@ -22,6 +23,12 @@ database:
   servicePort: 5433
   type: ClusterIP
   sslMode: disable
+
+secrets:
+  dbPassword: ""
+  accessKey: ""
+  refreshKey: ""
+  adminPassword: ""
 
 storage:
   storageClass: nfs-csi

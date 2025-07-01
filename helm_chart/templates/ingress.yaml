@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-backend-ingress
+  name: lmw-fitness-backend-ingress
   namespace: {{ .Values.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
@@ -15,6 +15,6 @@ spec:
             pathType: {{ .Values.api.pathType }}
             backend:
               service:
-                name: {{ .Values.namespace }}-backend-service
+                name: lmw-fitness-backend-service
                 port:
                   number: {{ .Values.api.port }}

@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-postgres-deployment
+  name: lmw-fitness-postgres-deployment
   namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: {{ .Release.Name }}-postgres-deployment
+    meta.helm.sh/release-name: lmw-fitness-postgres-deployment
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-postgres
+      app: lmw-fitness-postgres
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-postgres
+        app: lmw-fitness-postgres
     spec:
       containers:
       - name: postgres
@@ -34,12 +34,12 @@ spec:
         - name: POSTGRES_USER
           valueFrom:
             configMapKeyRef:
-              name: {{ .Release.Name }}-backend-configmap
+              name: lmw-fitness-backend-configmap
               key: DB_USER
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
-              name: {{ .Release.Name }}-backend-configmap
+              name: lmw-fitness-backend-configmap
               key: DB_NAME
         - name: POSTGRES_PASSWORD
           valueFrom:
@@ -72,21 +72,21 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-postgres-pvc
+            claimName: lmw-fitness-postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-postgres-service
+  name: lmw-fitness-postgres-service
   namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/managed-by: Helm
   annotations:
-    meta.helm.sh/release-name: {{ .Release.Name }}-postgres-service
+    meta.helm.sh/release-name: lmw-fitness-postgres-service
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
 spec:
   selector:
-    app: {{ .Release.Name }}-postgres
+    app: lmw-fitness-postgres
   ports:
   - port: {{ .Values.database.servicePort }}
     targetPort: {{ .Values.database.port }}
