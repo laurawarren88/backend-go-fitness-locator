@@ -25,10 +25,10 @@ database:
   sslMode: disable
 
 secrets:
-  dbPassword: ""
-  accessKey: ""
-  refreshKey: ""
-  adminPassword: ""
+  dbPassword: <+secrets.getValue("db_password_harness_secret")>
+  accessKey: <+secrets.getValue("access_key_harness_secret")>
+  refreshKey: <+secrets.getValue("refresh_key_harness_secret")>
+  adminPassword: <+secrets.getValue("admin_password_harness_secret")>
 
 storage:
   storageClass: nfs-csi
