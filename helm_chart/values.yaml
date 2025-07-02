@@ -25,10 +25,10 @@ database:
   sslMode: disable
 
 secrets:
-  dbPassword: <+pipeline.variables.dbPassword>
-  accessSecretKey: <+pipeline.variables.accessSecretKey>
-  refreshSecretKey: <+pipeline.variables.refreshSecretKey>
-  adminPassword: <+pipeline.variables.adminPassword>
+  DB_PASSWORD: <+pipeline.variables.dbPassword>
+  ACCESS_SECRET_KEY: <+pipeline.variables.accessSecretKey>
+  REFRESH_SECRET_KEY: <+pipeline.variables.refreshSecretKey>
+  ADMIN_PASSWORD: <+pipeline.variables.adminPassword>
 
 cookies:
   env: development
