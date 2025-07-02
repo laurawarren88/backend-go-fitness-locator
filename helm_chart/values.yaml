@@ -24,11 +24,11 @@ database:
   type: ClusterIP
   sslMode: disable
 
-# secrets:
-#   dbPassword: <+secrets.getValueBase64("DB_PASSWORD")>
-#   accessKey: <+secrets.getValueBase64("ACCESS_SECRET_KEY")>
-#   refreshKey: <+secrets.getValueBase64("REFRESH_SECRET_KEY")>
-#   adminPassword: <+secrets.getValueBase64("ADMIN_PASSWORD")>
+secrets:
+  dbPassword: <+pipeline.variables.dbPassword>
+  accessSecretKey: <+pipeline.variables.accessSecretKey>
+  refreshSecretKey: <+pipeline.variables.refreshSecretKey>
+  adminPassword: <+pipeline.variables.adminPassword>
 
 cookies:
   env: development
